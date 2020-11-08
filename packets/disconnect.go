@@ -26,9 +26,3 @@ func (d *DisconnectPacket) Write(w io.Writer) error {
 func (d *DisconnectPacket) Unpack(b io.Reader) error {
 	return nil
 }
-
-//Details returns a Details struct containing the Qos and
-//MessageID of this ControlPacket
-func (d *DisconnectPacket) Details() Details {
-	return Details{Qos: 0, MessageID: 0}
-}

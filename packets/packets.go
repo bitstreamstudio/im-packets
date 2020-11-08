@@ -150,14 +150,6 @@ func NewControlPacketWithHeader(fh FixedHeader) (ControlPacket, error) {
 	return nil, fmt.Errorf("unsupported packet type 0x%x", fh.MessageType)
 }
 
-//Details struct returned by the Details() function called on
-//ControlPackets to present details of the Qos and MessageID
-//of the ControlPacket
-type Details struct {
-	Qos       byte
-	MessageID uint16
-}
-
 //FixedHeader is a struct to hold the decoded information from
 //the fixed header of an MQTT ControlPacket
 type FixedHeader struct {
