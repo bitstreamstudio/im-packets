@@ -154,7 +154,7 @@ func NewControlPacketWithHeader(fh FixedHeader) (ControlPacket, error) {
 //the fixed header of an MQTT ControlPacket
 type FixedHeader struct {
 	MessageType     byte
-	MsqSeq          uint16
+	MsqSeq          uint32
 	Version         byte
 	RemainingLength int
 }
@@ -175,8 +175,7 @@ func boolToByte(b bool) byte {
 func (fh *FixedHeader) pack() bytes.Buffer {
 	var header bytes.Buffer
 	header.WriteByte(fh.MessageType)
-	header.WriteByte(byte(fh.MsqSeq >> 4))
-	header.WriteByte(byte(fh.MsqSeq & 0xFF))
+	header.Write(encodeUint32(fh.MsqSeq))
 	header.WriteByte(fh.Version)
 	header.Write(encodeLength(fh.RemainingLength))
 	return header
@@ -185,20 +184,14 @@ func (fh *FixedHeader) pack() bytes.Buffer {
 func (fh *FixedHeader) unpack(typeAndFlags byte, r io.Reader) error {
 	fh.MessageType = typeAndFlags
 	var err error
-	msb, err := decodeByte(r)
+	fh.MsqSeq, err = decodeUint32(r)
 	if err != nil {
 		return err
 	}
-	lsb, err := decodeByte(r)
+	fh.Version, err = decodeByte(r)
 	if err != nil {
 		return err
 	}
-	fh.MsqSeq = uint16(msb)<<8 | uint16(lsb)
-	version, err := decodeByte(r)
-	if err != nil {
-		return err
-	}
-	fh.Version = version
 	fh.RemainingLength, err = decodeLength(r)
 	return err
 }
@@ -222,9 +215,24 @@ func decodeUint16(b io.Reader) (uint16, error) {
 	return binary.BigEndian.Uint16(num), nil
 }
 
+func decodeUint32(b io.Reader) (uint32, error) {
+	num := make([]byte, 4)
+	_, err := b.Read(num)
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint32(num), nil
+}
+
 func encodeUint16(num uint16) []byte {
 	bytesResult := make([]byte, 2)
 	binary.BigEndian.PutUint16(bytesResult, num)
+	return bytesResult
+}
+
+func encodeUint32(num uint32) []byte {
+	bytesResult := make([]byte, 4)
+	binary.BigEndian.PutUint32(bytesResult, num)
 	return bytesResult
 }
 
