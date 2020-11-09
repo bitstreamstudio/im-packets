@@ -18,7 +18,7 @@ func (p *PublishPacket) String() string {
 
 func (p *PublishPacket) Write(w io.Writer) error {
 	var err error
-	p.FixedHeader.RemainingLength = len(p.Payload)
+	p.FixedHeader.RemainingLength = uint32(len(p.Payload))
 	packet := p.FixedHeader.pack()
 	packet.Write(p.Payload)
 	_, err = w.Write(packet.Bytes())
