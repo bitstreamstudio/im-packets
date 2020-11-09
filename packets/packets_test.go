@@ -91,21 +91,21 @@ func TestEncoding(t *testing.T) {
 	}
 
 	lengths := map[int][]byte{
-		0:         {0x00},
-		127:       {0x7F},
-		128:       {0x80, 0x01},
-		16383:     {0xFF, 0x7F},
-		16384:     {0x80, 0x80, 0x01},
-		2097151:   {0xFF, 0xFF, 0x7F},
-		2097152:   {0x80, 0x80, 0x80, 0x01},
-		268435455: {0xFF, 0xFF, 0xFF, 0x7F},
+		0:          {0x00, 0x00, 0x00, 0x00},
+		127:        {0x00, 0x00, 0x00, 0x7F},
+		32769:      {0x00, 0x00, 0x80, 0x01},
+		65407:      {0x00, 0x00, 0xFF, 0x7F},
+		8421377:    {0x00, 0x80, 0x80, 0x01},
+		16777087:   {0x00, 0xFF, 0xFF, 0x7F},
+		2155905025: {0x80, 0x80, 0x80, 0x01},
+		4294967167: {0xFF, 0xFF, 0xFF, 0x7F},
 	}
 	for length, encoded := range lengths {
-		if res, err := decodeLength(bytes.NewBuffer(encoded)); res != length || err != nil {
-			t.Errorf("decodeLength([0x%X]) did not return (%d, nil) but (%d, %v)", encoded, length, res, err)
+		if res, err := decodeUint32(bytes.NewBuffer(encoded)); int64(res) != int64(length) || err != nil {
+			t.Errorf("decodeUint32([0x%X]) did not return (%d, nil) but (%d, %v)", encoded, length, res, err)
 		}
-		if res := encodeLength(length); !bytes.Equal(res, encoded) {
-			t.Errorf("encodeLength(%d) did not return [0x%X], but [0x%X]", length, encoded, res)
+		if res := encodeUint32(uint32(length)); !bytes.Equal(res, encoded) {
+			t.Errorf("encodeUint32(%d) did not return [0x%X], but [0x%X]", length, encoded, res)
 		}
 	}
 }
