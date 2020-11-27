@@ -1,0 +1,9 @@
+syntax = "proto3";
+option go_package = ".;protocol";
+message KickoutReq{
+  enum Reason{
+    ADMIN_OPT = 0;
+    OTHER_DEVICE_LOGIN = 1;
+  }
+  Reason reason = 1;
+}

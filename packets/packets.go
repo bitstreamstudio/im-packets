@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/bitstreamstudio/im-packets/protocol"
 	"io"
 )
 
@@ -20,20 +21,18 @@ type ControlPacket interface {
 //PacketNames maps the constants for each of the MQTT packet types
 //to a string representation of their name.
 var PacketNames = map[uint8]string{
-	1: "PUBLISH",
-	2: "PUBACK",
-	3: "PINGREQ",
-	4: "PINGRESP",
-	5: "DISCONNECT",
+	1: "PINGREQ",
+	2: "PINGRESP",
+	3: "DISCONNECT",
+	4: "LOGINREQ",
 }
 
 //Below are the constants assigned to each of the MQTT packet types
 const (
-	Publish    = 1
-	Puback     = 2
-	Pingreq    = 3
-	Pingresp   = 4
-	Disconnect = 5
+	Pingreq    = 1
+	Pingresp   = 2
+	Disconnect = 3
+	Loginreq   = 4
 )
 
 //Below are the const definitions for error codes returned by
@@ -47,6 +46,12 @@ const (
 	ErrRefusedNotAuthorised         = 0x05
 	ErrNetworkError                 = 0xFE
 	ErrProtocolViolation            = 0xFF
+)
+
+const (
+	FormatProto   = 0
+	FormatJson    = 1
+	FormatDefault = FormatProto
 )
 
 //ConnackReturnCodes is a map of the error codes constants for Connect()
@@ -119,14 +124,12 @@ func NewControlPacket(packetType byte) ControlPacket {
 	switch packetType {
 	case Disconnect:
 		return &DisconnectPacket{FixedHeader: FixedHeader{MessageType: Disconnect}}
-	case Publish:
-		return &PublishPacket{FixedHeader: FixedHeader{MessageType: Publish}}
-	case Puback:
-		return &PubackPacket{FixedHeader: FixedHeader{MessageType: Puback}}
 	case Pingreq:
 		return &PingreqPacket{FixedHeader: FixedHeader{MessageType: Pingreq}}
 	case Pingresp:
 		return &PingrespPacket{FixedHeader: FixedHeader{MessageType: Pingresp}}
+	case Loginreq:
+		return &LoginreqPacket{FixedHeader: FixedHeader{MessageType: Loginreq}, LoginReq: protocol.LoginReq{}}
 	}
 	return nil
 }
@@ -138,29 +141,30 @@ func NewControlPacketWithHeader(fh FixedHeader) (ControlPacket, error) {
 	switch fh.MessageType {
 	case Disconnect:
 		return &DisconnectPacket{FixedHeader: fh}, nil
-	case Publish:
-		return &PublishPacket{FixedHeader: fh}, nil
-	case Puback:
-		return &PubackPacket{FixedHeader: fh}, nil
 	case Pingreq:
 		return &PingreqPacket{FixedHeader: fh}, nil
 	case Pingresp:
 		return &PingrespPacket{FixedHeader: fh}, nil
+	case Loginreq:
+		return &LoginreqPacket{FixedHeader: fh, LoginReq: protocol.LoginReq{}}, nil
 	}
+
 	return nil, fmt.Errorf("unsupported packet type 0x%x", fh.MessageType)
 }
 
 //FixedHeader is a struct to hold the decoded information from
 //the fixed header of an MQTT ControlPacket
 type FixedHeader struct {
-	MessageType     byte
-	MsqSeq          uint32
-	Version         byte
-	RemainingLength uint32
+	MessageType     byte   `json:"-"`
+	MsqSeq          uint32 `json:"-"`
+	Version         byte   `json:"-"`
+	Format          byte   `json:"-"`
+	Flag            byte   `json:"-"`
+	RemainingLength uint32 `json:"-"`
 }
 
 func (fh FixedHeader) String() string {
-	return fmt.Sprintf("%s: msgSeq: %d version: %d rLength: %d", PacketNames[fh.MessageType], fh.MsqSeq, fh.Version, fh.RemainingLength)
+	return fmt.Sprintf("%s: msgSeq:%d version:%d format:%d flag:%d rLength:%d", PacketNames[fh.MessageType], fh.MsqSeq, fh.Version, fh.Format, fh.Flag, fh.RemainingLength)
 }
 
 func boolToByte(b bool) byte {
@@ -177,6 +181,8 @@ func (fh *FixedHeader) pack() bytes.Buffer {
 	header.WriteByte(fh.MessageType)
 	header.Write(encodeUint32(fh.MsqSeq))
 	header.WriteByte(fh.Version)
+	header.WriteByte(fh.Format)
+	header.WriteByte(fh.Flag)
 	header.Write(encodeUint32(fh.RemainingLength))
 	return header
 }
@@ -189,6 +195,14 @@ func (fh *FixedHeader) unpack(typeAndFlags byte, r io.Reader) error {
 		return err
 	}
 	fh.Version, err = decodeByte(r)
+	if err != nil {
+		return err
+	}
+	fh.Format, err = decodeByte(r)
+	if err != nil {
+		return err
+	}
+	fh.Flag, err = decodeByte(r)
 	if err != nil {
 		return err
 	}

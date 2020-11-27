@@ -1,0 +1,59 @@
+syntax = "proto3";
+option go_package = ".;protocol";
+message MessageText{
+  enum Type{
+    //纯文本
+    plain = 0;
+    //md格式
+    markdown = 1;
+  }
+  Type type = 1;
+  string  content = 2;
+}
+
+message MessageImage{
+  //图片预览图连接
+  string thumb_url = 1;
+  //图片原始大小连接
+  string src_url = 2;
+  //图片大小
+  int32 src_size = 3;
+}
+
+message MessageAudio{
+  //语音连接
+  string src_url = 1;
+  //语音时长
+  int32 duration = 2;
+}
+
+message MessageVideo{
+  //视频预览图连接
+  string thumb_url = 1;
+  //视频原始大小连接
+  string src_url = 2;
+  //视频大小
+  int32 src_size = 3;
+  //视频时长
+  int32 duration = 4;
+}
+
+message MessageFile{
+  //文件连接
+  string src_url = 1;
+  //文件大小
+  int32 src_size = 2;
+  string type = 3;
+}
+
+message MessageLocation{
+  float latitude = 1;
+  float longitude = 2;
+  string address = 3;
+}
+enum MessageState{
+  accepted = 0;
+  dispatched = 1;
+  received = 2;
+  cousumed = 3;
+}

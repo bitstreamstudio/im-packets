@@ -1,0 +1,6 @@
+syntax = "proto3";
+option go_package = ".;protocol";
+message PeerMsgSendReq{
+  string sender = 1;
+  string receiver = 2;
+}

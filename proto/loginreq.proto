@@ -1,0 +1,6 @@
+syntax = "proto3";
+option go_package = ".;protocol";
+message LoginReq{
+  string user_id = 1;
+  string token = 2;
+}

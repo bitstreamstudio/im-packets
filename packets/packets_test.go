@@ -6,48 +6,41 @@ import (
 )
 
 func TestPacketNames(t *testing.T) {
-	if PacketNames[1] != "PUBLISH" {
-		t.Errorf("PacketNames[3] is %s, should be %s", PacketNames[1], "PUBLISH")
+	if PacketNames[1] != "PINGREQ" {
+		t.Errorf("PacketNames[1] is %s, should be %s", PacketNames[3], "PINGREQ")
 	}
-	if PacketNames[2] != "PUBACK" {
-		t.Errorf("PacketNames[4] is %s, should be %s", PacketNames[2], "PUBACK")
+	if PacketNames[2] != "PINGRESP" {
+		t.Errorf("PacketNames[2] is %s, should be %s", PacketNames[4], "PINGRESP")
 	}
-	if PacketNames[3] != "PINGREQ" {
-		t.Errorf("PacketNames[12] is %s, should be %s", PacketNames[3], "PINGREQ")
+	if PacketNames[3] != "DISCONNECT" {
+		t.Errorf("PacketNames[3] is %s, should be %s", PacketNames[5], "DISCONNECT")
 	}
-	if PacketNames[4] != "PINGRESP" {
-		t.Errorf("PacketNames[13] is %s, should be %s", PacketNames[4], "PINGRESP")
-	}
-	if PacketNames[5] != "DISCONNECT" {
-		t.Errorf("PacketNames[14] is %s, should be %s", PacketNames[5], "DISCONNECT")
+	if PacketNames[4] != "LOGINREQ" {
+		t.Errorf("PacketNames[4] is %s, should be %s", PacketNames[5], "LOGINREQ")
 	}
 }
 
 func TestPacketConsts(t *testing.T) {
-	if Publish != 1 {
-		t.Errorf("Const for Publish is %d, should be %d", Publish, 1)
-	}
-	if Puback != 2 {
-		t.Errorf("Const for Puback is %d, should be %d", Puback, 2)
-	}
-	if Pingreq != 3 {
+	if Pingreq != 1 {
 		t.Errorf("Const for Pingreq is %d, should be %d", Pingreq, 3)
 	}
-	if Pingresp != 4 {
+	if Pingresp != 2 {
 		t.Errorf("Const for Pingresp is %d, should be %d", Pingresp, 4)
 	}
-	if Disconnect != 5 {
+	if Disconnect != 3 {
 		t.Errorf("Const for Disconnect is %d, should be %d", Disconnect, 5)
+	}
+	if Loginreq != 4 {
+		t.Errorf("Const for Loginreq is %d, should be %d", Loginreq, 6)
 	}
 }
 
 func TestPackUnpackControlPackets(t *testing.T) {
 	packets := []ControlPacket{
-		NewControlPacket(Publish).(*PublishPacket),
-		NewControlPacket(Puback).(*PubackPacket),
 		NewControlPacket(Pingreq).(*PingreqPacket),
 		NewControlPacket(Pingresp).(*PingrespPacket),
 		NewControlPacket(Disconnect).(*DisconnectPacket),
+		NewControlPacket(Loginreq).(*LoginreqPacket),
 	}
 	buf := new(bytes.Buffer)
 	for _, packet := range packets {

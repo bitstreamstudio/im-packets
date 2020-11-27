@@ -1,0 +1,9 @@
+syntax = "proto3";
+option go_package = ".;protocol";
+message LoginResp{
+  enum Status {
+    OK = 0;
+    ERROR = -1;
+  }
+  Status code = 1;
+}
