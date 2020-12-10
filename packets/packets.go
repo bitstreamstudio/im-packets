@@ -9,6 +9,8 @@ import (
 	"io"
 )
 
+const MAX_PAYLOAD_LENGTH_3MB = 3 * 1024 * 1024
+
 //ControlPacket defines the interface for structs intended to hold
 //decoded MQTT packets, either from being read or before being
 //written
@@ -53,6 +55,8 @@ const (
 	FormatJson    = 1
 	FormatDefault = FormatProto
 )
+
+var ErrOutMaxPayloadLength = errors.New("tcp protocol package payload out of max length 3MB")
 
 //ConnackReturnCodes is a map of the error codes constants for Connect()
 //to a string representation of the error
@@ -207,6 +211,9 @@ func (fh *FixedHeader) unpack(typeAndFlags byte, r io.Reader) error {
 		return err
 	}
 	fh.RemainingLength, err = decodeUint32(r)
+	if fh.RemainingLength > MAX_PAYLOAD_LENGTH_3MB {
+		return ErrOutMaxPayloadLength
+	}
 	return err
 }
 
